@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+        }
+        button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Manager</h1>
+        <form id="stockForm">
+            <input type="text" id="stockInput" placeholder="Enter stock symbol" required>
+            <button type="submit">Add Stock</button>
+        </form>
+        <ul id="stockList"></ul>
+        <button onclick="saveAndClose()">Save and Close</button>
+    </div>
+
+    <script>
+        const stockForm = document.getElementById('stockForm');
+        const stockInput = document.getElementById('stockInput');
+        const stockList = document.getElementById('stockList');
+
+        // Load stocks from server
+        const loadStocks = async () => {
+            const response = await fetch('/stocks');
+            const stocks = await response.json();
+            stockList.innerHTML = '';
+            stocks.forEach((stock, index) => {
+                const li = document.createElement('li');
+                li.textContent = stock;
+                const button = document.createElement('button');
+                button.textContent = 'Remove';
+                button.onclick = () => removeStock(index);
+                li.appendChild(button);
+                stockList.appendChild(li);
+            });
+        };
+
+        // Add stock to server
+        const addStock = async (stock) => {
+            await fetch('/stocks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ stock })
+            });
+            loadStocks();
+        };
+
+        // Remove stock from server
+        const removeStock = async (index) => {
+            await fetch(`/stocks/${index}`, {
+                method: 'DELETE'
+            });
+            loadStocks();
+        };
+
+        // Handle form submit
+        stockForm.onsubmit = (event) => {
+            event.preventDefault();
+            const stock = stockInput.value.trim().toUpperCase();
+            if (stock) {
+                addStock(stock);
+                stockInput.value = '';
+            }
+        };
+
+        // Load stocks on page load
+        loadStocks();
+
+        // Save and close the browser tab
+        const saveAndClose = () => {
+            fetch('/close', {
+                method: 'POST'
+            }).then(() => {
+                window.close();
+            });
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+NVDA
+IAG
+AAPL
+TTE
